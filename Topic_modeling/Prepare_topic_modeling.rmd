@@ -1,0 +1,99 @@
+---
+title: "Structural Topic Models"
+author: "Nomena Radimilahy"
+date: "2023-11-08"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+# Datensatz einlesen
+twitter <- read.csv("C:/Users/nomen/Twitter_Data_Analysis/data/twitter_data.csv", sep = ",", header = T, stringsAsFactors = T)
+```
+
+```{r}
+head(twitter)
+```
+
+
+```{r}
+str(twitter)
+```
+
+## 2. Überprüfung der Vollständigkeit
+
+Identifizieren wir nun die expliziten und implizite Fehlwerte.
+
+
+```{r}
+table(is.na(twitter$IsReplyToStatusId))
+```
+
+```{r}
+twitter_new <- data.frame(Id = twitter$Id, CreatedAt = twitter$CreatedAt, RetweetCount = twitter$RetweetCount, FavoriteCount...LikeCount = twitter$FavoriteCount...LikeCount, Text = twitter$Text, ReplyId = twitter$IsReplyToStatusId, UserFollowersCount = twitter$UserFollowersCount, UserFriendsCount = twitter$UserFriendsCount, UserVerified = twitter$UserVerified)
+head(twitter_new)
+```
+
+```{r}
+# Remove Retweets
+twitter_new <- twitter_new[!startsWith(as.character(twitter_new$Text), "RT"), ]
+str(twitter_new)
+```
+
+
+```{r}
+# Fehlwerte nochmal checken
+sapply(twitter_new, function(x) sum(x %in% c("", " ", "NA", "N/A", "unknown", "Not Available")))
+na_count <- sapply(twitter_new, function(x) sum(is.na(x)))
+na_count
+
+```
+
+```{r}
+# explizite Fehlwerte
+colSums((is.na(twitter_new)))
+
+rows_with_na <- apply(twitter_new, 1, function(x) any(is.na(x)))
+twitter_new[rows_with_na, ]
+```
+
+```{r}
+library(dplyr)
+
+# Replace NA with Twitter ID
+twitter_new <- twitter_new %>%
+  mutate(ReplyId = ifelse(is.na(ReplyId), Id, ReplyId))
+```
+
+```{r}
+na_count <- sapply(twitter_new, function(x) sum(is.na(x)))
+na_count
+
+colSums((is.na(twitter_new)))
+
+```
+
+
+```{r}
+# Group by ReplyId and concatenate Text, separate with ". "
+discussion <- twitter_new %>%
+  group_by(ReplyId) %>%
+  summarise(Text = paste(Text, collapse = ". ")) %>%
+  ungroup()
+
+
+discussion
+```
+
+```{r}
+str(discussion)
+```
+
+```{r}
+# Write the data frame to a CSV file
+write.csv(discussion, file = "C:/Users/nomen/Twitter_Data_Analysis/Topic_modeling/discussion.csv", row.names = FALSE)
+```
+
