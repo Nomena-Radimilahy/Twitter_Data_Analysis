@@ -1,8 +1,6 @@
 import pandas as pd
 import re
 import html
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
 
 
 def remove_emojis(text):
@@ -71,23 +69,6 @@ def decode_html_entities(text):
     return html.unescape(text)
 
 
-def remove_stopwords(text):
-    """This function remove the stopwords"""
-    # Tokenisieren Sie den Text
-    word_tokens = word_tokenize(text)
-
-    # Liste von Stoppwörtern
-    stop_words = set(stopwords.words('english'))
-
-    # Entfernen Sie die Stoppwörter
-    word_tagged = [word for word in word_tokens if word.lower() not in stop_words]
-
-    # Join the words back into a string
-    word_tagged = ' '.join(word_tagged)
-
-    return word_tagged
-
-
 def remove_extra_spaces(text):
     """
     Entfernt überflüssige Leerzeichen, Zeilenumbrüche und Tabs aus dem Text.
@@ -97,8 +78,30 @@ def remove_extra_spaces(text):
     return text
 
 
+def remove_alpha(text):
+    """
+    This function takes a string as input and removes all non-alphabetical characters.
+    Except patterns like GPT-3, GPT3,5 and GPT-4
+    """
+    # Temporarily replace 'GPT-3' and 'GPT-4' with a placeholder to avoid it being affected by the regex
+    placeholder = "PLACEHOLDER"
+    holder = "HOLDER"
+    text = text.replace('GPT-3', placeholder)
+    text = text.replace('GPT-4', holder)
+
+    # Remove non-alphabetical characters while keeping spaces
+    text = re.sub("[^a-zA-Z\s]+", " ", text)
+
+    # Replace the placeholder with the original
+    text = text.replace(placeholder, 'GPT-3')
+    text = text.replace(holder, 'GPT-4')
+
+    # Split on whitespace and rejoin to ensure proper spacing
+    return " ".join(text.split())
+
+
 def main():
-    twitter_data = pd.read_csv("C:/Users/nomen/Twitter_Data_Analysis/Topic_modeling/discussion.csv", encoding='utf-8')
+    twitter_data = pd.read_csv("C:/Users/nomen/Twitter_Data_Analysis/data/twitter_clean.csv", encoding='utf-8')
     tweets = twitter_data['Text']
 
     print(tweets.iloc[47])
@@ -115,8 +118,8 @@ def main():
     # remove hastags
     tweets = tweets.apply(remove_hashtags)
 
-    # change to lower case
-    #tweets = tweets.apply(to_lower_case)
+    # change to lower case ( for Sentiment analysis )
+    # tweets = tweets.apply(to_lower_case)
 
     # remove the quotation marks covering the tweet
     tweets = tweets.apply(remove_edge_characters)
@@ -124,8 +127,8 @@ def main():
     # remove HTML impurities
     tweets = tweets.apply(decode_html_entities)
 
-    # remove stopwords
-    #tweets = tweets.apply(remove_stopwords)
+    # remove non-alphabetical characters, not used because punctuations are needed
+    # tweets = tweets.apply(remove_alpha)
 
     # remove extra spaces
     tweets = tweets.apply(remove_extra_spaces)
@@ -135,11 +138,14 @@ def main():
 
     print(tweets.iloc[47])  # corresponds to 49
 
+    # Remove duplicates: keep='False' removes all duplicates (from first and last)
+    final_data = twitter_data[~twitter_data.duplicated('Text', keep=False)]
+
     # remove empty tweets
-    final_data = remove_empty_tweets(twitter_data, 'Text')
+    final_data = remove_empty_tweets(final_data, 'Text')
 
     # Speichert den bereinigten DataFrame
-    final_data.to_csv("C:/Users/nomen/Twitter_Data_Analysis/Topic_modeling/discussion_cleaned.csv", encoding='utf-8', index=False)
+    final_data.to_csv("C:/Users/nomen/Twitter_Data_Analysis/data/twitter_cleaned.csv", encoding='utf-8', index=False)
 
 
 if __name__ == '__main__':
