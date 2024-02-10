@@ -26,7 +26,7 @@ To replicate the model and ensure consistent performance across different system
 ```
 conda env create -f environment.yml
 
-``
+```
 
 **3. Activate the Environment:** Once the environment is successfully created, activate it using:
 
