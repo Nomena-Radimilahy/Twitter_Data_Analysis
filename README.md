@@ -10,6 +10,8 @@ The analysis seeks to address the following research questions:
 
 **RQ2**: Which aspects of ChatGPT were most frequently discussed on Twitter?
 
+**RQ3**: Welche Faktoren haben zur schnellen Verbreitung von ChatGPT in den ersten drei Monaten nach seiner Veröffentlichung beigetragen?
+
 To answer these qu stions, the study employs sentiment analysis using the VADER tool and topic modeling  nalys s using BRTopic.
 ERTopic.
 ase.
